@@ -1,6 +1,8 @@
 # Colab AF3 Runner
 
-A Codex Skill for running and monitoring AlphaFold 3 on a Google Colab GPU. It covers input checks, inference with supplied MSAs, recovery after an interrupted launch, local result verification, and optional Google Drive backup.
+English | [简体中文](README.zh-CN.md)
+
+A Codex Skill for running AlphaFold 3 batches on Google Colab. Codex uses the Colab CLI to connect to an authorized GPU session, validate AF3 inputs, and process requests in the specified order. The Skill also describes how to resume an interrupted batch and verify and back up its outputs.
 
 ## Install
 
@@ -12,7 +14,33 @@ mkdir -p .agents/skills
 cp -R /tmp/colab-af3-runner/skills/colab-af3-runner .agents/skills/
 ```
 
-In Codex, invoke `$colab-af3-runner` and specify your AF3 inputs, seeds, samples per seed, and output directory. Start by asking it to check the inputs and runtime configuration if you want a preflight before allocating a GPU.
+## Run a batch in Codex
+
+```text
+$colab-af3-runner
+Use the Colab CLI to run the AF3 JSON files in ./inputs in the order in
+./run_order.tsv. Check the supplied MSAs and preserve each input's seeds.
+Produce five samples per seed and save each request in ./results.
+If the connection drops, check the same session and task before retrying.
+Resume from the first unfinished request after verifying saved results.
+Verify local file sizes and SHA-256 against the runtime inventory, then
+back up each verified result to my specified Google Drive folder.
+```
+
+1. **Connect and run.** Verify the Colab GPU session and the pinned AF3 deployment. Check the inputs, including supplied MSA, before processing the batch.
+2. **Resume safely.** Use the recorded session and task IDs to reconnect first. If the runtime is gone, reconcile the previous attempt and resume from the first unfinished request using the saved manifest.
+3. **Verify and back up.** After each request, check that all expected seeds and samples are present. Compare the local output inventory with the runtime inventory by path, byte size, and SHA-256. For a requested Drive backup, upload the verified local copy and confirm its Drive metadata.
+
+## Related projects
+
+| Project | What it covers |
+| --- | --- |
+| [ByteTora/alphafold3-skills](https://github.com/ByteTora/alphafold3-skills) | AF3 skills for input generation, batch inference, result interpretation, and remote GPU jobs using Docker, Singularity, and SSH. |
+| [Google Colab CLI: colab-operator](https://github.com/googlecolab/google-colab-cli/blob/main/skills/colab-operator/SKILL.md) | General Colab operations, including GPU allocation, remote execution, file transfer, and Drive mounting. |
+| [ColabFold AF3 notebook](https://github.com/sokrypton/ColabFold/blob/main/AlphaFold3_of3.ipynb) | A Colab notebook for interactive structure prediction, with options for OpenFold3 and DeepMind AF3 weights. |
+| [AF_Cache](https://github.com/clami66/AF_cache) | A Nextflow pipeline for high-throughput AF2 and AF3 prediction that reuses MSAs. |
+
+Colab AF3 Runner focuses on the handoff from Codex to Colab and back to local storage. It puts ordered batch execution, recovery from a recorded checkpoint, and verified result delivery into one workflow.
 
 ## Requirements
 
